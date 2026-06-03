@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<title>高光譜資料分析 Python + Orange — 食品化學教學影片</title>
+<style>
+:root{
+  --bg:#FAF7EE;--bg-card:#F2EDDC;--ink:#1A1A1A;
+  --teal:#0E7C7B;--coral:#E36414;--gold:#C8941F;--purple:#7c3aed;
+  --fs-hero:clamp(72px,6.5vw,118px);--fs-title:clamp(40px,4vw,72px);
+  --fs-sub:clamp(28px,2.8vw,48px);--fs-body:clamp(19px,2vw,34px);--fs-note:clamp(14px,1.5vw,27px)
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;background:var(--ink);color:var(--ink);font-family:'Noto Sans TC',sans-serif;overflow:hidden;user-select:none}
+.stage{position:fixed;inset:0}
+.slide{position:absolute;inset:0;opacity:0;padding:52px 70px 120px;display:flex;flex-direction:column;
+  align-items:flex-start;justify-content:flex-start;background:var(--bg);
+  transition:opacity .6s ease;pointer-events:none;z-index:1}
+.slide.active{opacity:1;pointer-events:auto;z-index:2}
+.slide.dark{background:var(--ink);color:var(--bg);align-items:center;justify-content:center;text-align:center}
+.chip{position:absolute;top:26px;left:30px;font-size:clamp(12px,1.3vw,19px);font-weight:700;color:rgba(26,26,26,.5);z-index:5}
+.chip span{background:var(--teal);color:#fff;padding:3px 10px;border-radius:4px;font-weight:900;margin-right:6px}
+.slide.dark .chip{color:rgba(250,247,238,.45)}
+.progress-bar{position:absolute;left:0;bottom:0;height:8px;background:linear-gradient(90deg,var(--teal),var(--gold));width:0%;transition:width .15s linear;z-index:99}
+.subtitle{position:fixed;left:50%;bottom:38px;transform:translateX(-50%);width:86%;max-width:1480px;
+  padding:11px 26px;border-radius:11px;background:rgba(26,26,26,.9);color:#fff;font-weight:700;
+  font-size:var(--fs-note);line-height:1.4;text-align:center;z-index:95;min-height:46px;opacity:0;transition:opacity .3s}
+.slide-title{font-weight:900;font-size:var(--fs-title);line-height:1.12;margin-bottom:16px;color:var(--ink);border-left:12px solid var(--teal);padding-left:22px}
+.slide.dark .slide-title{border:none;padding:0;color:var(--bg)}
+.lead{font-size:var(--fs-body);color:rgba(26,26,26,.78);line-height:1.5;margin-bottom:10px}
+.hl{color:var(--teal)}.co{color:var(--coral)}.go{color:var(--gold)}.pu{color:var(--purple)}
+.big-q{font-size:var(--fs-hero);font-weight:900;line-height:1.1;margin-bottom:16px;animation:fadeUp .8s .2s both}
+.big-q span{color:var(--teal)}
+.answer-line{font-size:var(--fs-sub);color:rgba(250,247,238,.82);animation:fadeUp .6s .8s both;max-width:1100px}
+/* figure pages */
+.fig-wrap{width:100%;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+.fig-wrap img{max-width:100%;max-height:60vh;border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.12);background:#fff}
+.fig-row{display:grid;grid-template-columns:1.35fr 1fr;gap:36px;width:100%;flex:1;align-items:center}
+.fig-row img{max-width:100%;max-height:64vh;border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.12);background:#fff}
+.cap{background:var(--bg-card);border-radius:14px;padding:20px 26px;border-left:8px solid var(--teal)}
+.cap.coral{border-left-color:var(--coral)} .cap.gold{border-left-color:var(--gold)}
+.cap h4{font-size:var(--fs-sub);font-weight:900;color:var(--teal);margin-bottom:10px}
+.cap.coral h4{color:var(--coral)} .cap.gold h4{color:var(--gold)}
+.cap p{font-size:var(--fs-note);color:rgba(26,26,26,.8);line-height:1.55;margin-bottom:6px}
+.cap .big-num{font-family:monospace;font-size:clamp(28px,3.2vw,56px);font-weight:900;color:var(--coral);display:block;margin:6px 0}
+.l2{display:grid;grid-template-columns:1fr 1fr;gap:44px;width:100%;align-items:start;margin-top:6px}
+.foodgrid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.foodcard{background:var(--bg-card);border-radius:14px;padding:16px 18px;border:2px solid rgba(0,0,0,.06);text-align:center}
+.foodcard .emoji{font-size:2.4rem}
+.foodcard .nm{font-size:var(--fs-note);font-weight:900;margin-top:4px}
+.foodcard .ct{font-family:monospace;font-size:0.95rem;color:rgba(26,26,26,.6)}
+.box{background:var(--bg-card);border-radius:14px;padding:22px 26px}
+.box.warn{border-left:8px solid var(--gold)}
+.box.warn h4{color:var(--gold);font-size:var(--fs-sub);font-weight:900;margin-bottom:10px}
+.box ul{padding-left:1.2em;list-style:disc}
+.box ul li{font-size:var(--fs-note);color:rgba(26,26,26,.8);margin-bottom:7px;line-height:1.5}
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+@keyframes pop{from{transform:scale(.5);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes drawLine{from{stroke-dashoffset:var(--len,400)}to{stroke-dashoffset:0}}
+.fade-in{animation:fadeUp .7s ease both}
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <!-- P1 Hook -->
+  <div class="slide dark active" data-slide="1">
+    <div class="chip"><span>01</span>/ 9 — 高光譜 × Python × Orange</div>
+    <div class="big-q">一張照片，能告訴你<br><span>食物裡有多少水、多少糖嗎？</span></div>
+    <div class="answer-line">普通照片只有 RGB 三通道；高光譜每個像素記錄數百個波段——看見肉眼看不見的化學</div>
+    <div class="progress-bar" id="pb1"></div>
+  </div>
+
+  <!-- P2 Data cube -->
+  <div class="slide" data-slide="2">
+    <div class="chip"><span>02</span>/ 9 — 資料立方體</div>
+    <div class="slide-title">高光譜資料 = <span class="hl">空間 × 空間 × 光譜</span></div>
+    <div style="display:flex;gap:50px;align-items:center;width:100%;flex:1">
+      <svg viewBox="0 0 460 340" width="430" height="320" style="flex-shrink:0">
+        <!-- RGB: 3 layers -->
+        <text x="70" y="40" font-family="GenSeki TW,sans-serif" font-size="17" font-weight="900" fill="#1A1A1A" opacity="0" style="animation:fadeUp .4s .3s both">一般照片 RGB</text>
+        <g opacity="0" style="animation:fadeUp .5s .5s both">
+          <rect x="40" y="60" width="90" height="90" fill="#e11d48" opacity="0.55" stroke="#1A1A1A" stroke-width="1.5"/>
+          <rect x="55" y="75" width="90" height="90" fill="#16a34a" opacity="0.55" stroke="#1A1A1A" stroke-width="1.5"/>
+          <rect x="70" y="90" width="90" height="90" fill="#2563eb" opacity="0.55" stroke="#1A1A1A" stroke-width="1.5"/>
+          <text x="105" y="200" font-family="monospace" font-size="13" fill="#1A1A1A" text-anchor="middle">3 個波段</text>
+        </g>
+        <!-- arrow -->
+        <text x="205" y="135" font-size="34" fill="#0E7C7B" opacity="0" style="animation:fadeUp .4s 1.0s both">→</text>
+        <!-- Hyperspectral: many layers -->
+        <text x="270" y="40" font-family="GenSeki TW,sans-serif" font-size="17" font-weight="900" fill="#0E7C7B" opacity="0" style="animation:fadeUp .4s 1.2s both">高光譜立方體</text>
+        <g opacity="0" style="animation:fadeUp .6s 1.4s both">
+          <!-- stacked thin layers -->
+          <g>
+            <rect x="250" y="58" width="110" height="100" fill="#0E7C7B" opacity="0.18" stroke="#0E7C7B" stroke-width="1"/>
+            <rect x="256" y="64" width="110" height="100" fill="#0E7C7B" opacity="0.22" stroke="#0E7C7B" stroke-width="1"/>
+            <rect x="262" y="70" width="110" height="100" fill="#0E7C7B" opacity="0.26" stroke="#0E7C7B" stroke-width="1"/>
+            <rect x="268" y="76" width="110" height="100" fill="#0E7C7B" opacity="0.30" stroke="#0E7C7B" stroke-width="1"/>
+            <rect x="274" y="82" width="110" height="100" fill="#14b8a6" opacity="0.45" stroke="#0E7C7B" stroke-width="1.5"/>
+          </g>
+          <text x="330" y="205" font-family="monospace" font-size="13" fill="#0E7C7B" text-anchor="middle">數百個波段</text>
+          <!-- pixel marker -->
+          <rect x="300" y="108" width="10" height="10" fill="#E36414" stroke="#1A1A1A" stroke-width="1"/>
+        </g>
+        <!-- spectrum curve pulled from a pixel -->
+        <g opacity="0" style="animation:fadeUp .6s 2.0s both">
+          <line x1="310" y1="113" x2="350" y2="250" stroke="#E36414" stroke-width="1.5" stroke-dasharray="3,3"/>
+          <rect x="120" y="240" width="270" height="86" rx="8" fill="#fff" stroke="#E36414" stroke-width="1.5"/>
+          <polyline points="135,310 160,300 185,304 210,275 235,285 260,255 285,300 310,265 335,295 370,260" fill="none" stroke="#E36414" stroke-width="2.5"/>
+          <text x="135" y="258" font-family="GenSeki TW,sans-serif" font-size="12" fill="#E36414" font-weight="700">單一像素的光譜曲線 = 化學指紋</text>
+        </g>
+      </svg>
+      <div>
+        <p class="lead">一般彩色影像，每個像素只有 <span class="co">3 個數字</span>（紅綠藍）。</p>
+        <p class="lead">高光譜影像則是一個<span class="hl">資料立方體</span>：兩個空間維度 + 第三個維度的<strong>數百個連續波段</strong>。</p>
+        <p class="lead">從任何一個像素，都能取出一條完整的<span class="co">光譜曲線</span>——那就是那個位置的化學指紋。</p>
+      </div>
+    </div>
+    <div class="progress-bar" id="pb2"></div>
+  </div>
+
+  <!-- P3 Dataset -->
+  <div class="slide" data-slide="3">
+    <div class="chip"><span>03</span>/ 9 — 真實開源資料集</div>
+    <div class="slide-title">真實資料集：<span class="hl">SpectroFood</span>（Zenodo 開源）</div>
+    <div class="l2">
+      <div>
+        <div class="foodgrid">
+          <div class="foodcard"><div class="emoji">🍎</div><div class="nm" style="color:var(--coral)">蘋果 Apple</div><div class="ct">240 樣本</div></div>
+          <div class="foodcard"><div class="emoji">🥦</div><div class="nm" style="color:var(--teal)">花椰菜 Broccoli</div><div class="ct">250 樣本</div></div>
+          <div class="foodcard"><div class="emoji">🧅</div><div class="nm" style="color:var(--gold)">韭蔥 Leek</div><div class="ct">288 樣本</div></div>
+          <div class="foodcard"><div class="emoji">🍄</div><div class="nm" style="color:var(--purple)">蘑菇 Mushroom</div><div class="ct">250 樣本</div></div>
+        </div>
+        <p class="lead" style="text-align:center;margin-top:16px"><strong>1028 筆</strong> Vis-近紅外光譜 + 乾物質含量</p>
+      </div>
+      <div class="box warn">
+        <h4>⚠️ 真實資料的第一課</h4>
+        <ul>
+          <li>不同食材是用<strong>不同相機</strong>量的</li>
+          <li>波段範圍不一樣：蘋果到 773nm、<br>韭蔥延伸到 1717nm</li>
+          <li>→ 取四種食材<strong>共同的 141 個 Vis 波段</strong>（398–773nm）才能公平比較</li>
+        </ul>
+        <p style="font-size:var(--fs-note);color:var(--gold);margin-top:12px;font-weight:700">真實資料總是有點「髒」——清理它，是分析的第一步。</p>
+      </div>
+    </div>
+    <div class="progress-bar" id="pb3"></div>
+  </div>
+
+  <!-- P4 Spectra + SNV -->
+  <div class="slide" data-slide="4">
+    <div class="chip"><span>04</span>/ 9 — 光譜指紋 + 預處理</div>
+    <div class="slide-title">每種食材，都有自己的<span class="hl">光譜指紋</span></div>
+    <div class="fig-wrap">
+      <img src="assets/images/fig1_spectra.png" alt="spectral signatures">
+      <div class="cap" style="width:100%"><p><strong>左：</strong>四食材原始反射光譜（平均±標準差），形狀各異＝指紋。　<strong>右：</strong>SNV 標準常態變量標準化後，消除表面散射、量測距離造成的平移，<span class="hl">凸顯真正的化學差異</span>。</p></div>
+    </div>
+    <div class="progress-bar" id="pb4"></div>
+  </div>
+
+  <!-- P5 PCA -->
+  <div class="slide" data-slide="5">
+    <div class="chip"><span>05</span>/ 9 — 降維 PCA</div>
+    <div class="slide-title">PCA：141 個波段 → <span class="hl">2 個就夠</span></div>
+    <div class="fig-wrap">
+      <img src="assets/images/fig2_pca.png" alt="PCA">
+      <div class="cap coral" style="width:100%"><p>141 個波段高度相關。主成分分析 PCA 後，<span class="co">前兩個主成分就抓住 94.6% 變異</span>。把 PC1-PC2 畫成散布圖，四種食材<strong>自動分成四群</strong>——還沒分類，資料自己就攤牌了。</p></div>
+    </div>
+    <div class="progress-bar" id="pb5"></div>
+  </div>
+
+  <!-- P6 Classification -->
+  <div class="slide" data-slide="6">
+    <div class="chip"><span>06</span>/ 9 — 分類 SVM</div>
+    <div class="slide-title">分類：<span class="hl">100% 準確率</span>——但這代表什麼？</div>
+    <div class="fig-row">
+      <img src="assets/images/fig3_confusion.png" alt="confusion matrix">
+      <div class="cap"><h4>SVM / 隨機森林</h4>
+        <span class="big-num" style="color:var(--teal)">100%</span>
+        <p>測試集 257 筆，對角線全中、零誤分。</p>
+        <p style="margin-top:10px;color:var(--coral);font-weight:700">⚠️ 別急著高興：四種食材差異這麼大，100% 代表<strong>這題太簡單</strong>了。</p>
+        <p style="margin-top:6px">真正困難、更有價值的，是下一個任務——<span class="co">定量預測</span>。</p>
+      </div>
+    </div>
+    <div class="progress-bar" id="pb6"></div>
+  </div>
+
+  <!-- P7 Regression -->
+  <div class="slide" data-slide="7">
+    <div class="chip"><span>07</span>/ 9 — 迴歸 PLS（真功夫）</div>
+    <div class="slide-title">迴歸：從光譜預測<span class="co">乾物質含量</span></div>
+    <div class="fig-row">
+      <img src="assets/images/fig4_regression.png" alt="PLS regression">
+      <div class="cap gold"><h4>PLS 偏最小平方迴歸</h4>
+        <span class="big-num" style="color:var(--gold)">R²=0.84</span>
+        <p>韭蔥完整光譜（含 NIR 至 1717nm），10-fold 交叉驗證，RMSE 僅 0.96%。</p>
+        <p style="margin-top:10px">定性「是哪種」容易；定量「含多少」才難。</p>
+        <p style="margin-top:6px;color:var(--gold);font-weight:700">近紅外能感應水分與有機物吸收——這正是真實食品品管在用的技術。</p>
+      </div>
+    </div>
+    <div class="progress-bar" id="pb7"></div>
+  </div>
+
+  <!-- P8 Orange workflow -->
+  <div class="slide" data-slide="8">
+    <div class="chip"><span>08</span>/ 9 — Orange Data Mining</div>
+    <div class="slide-title">不想寫程式？<span class="hl">Orange</span> 拉一拉就完成</div>
+    <div style="width:100%;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px">
+      <svg viewBox="0 0 960 300" width="100%" style="max-height:46vh">
+        <defs>
+          <marker id="oarr" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#0E7C7B"/></marker>
+          <filter id="osh" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.18"/></filter>
+        </defs>
+        <!-- links (drawn first) -->
+        <g stroke="#0E7C7B" stroke-width="2.5" fill="none" marker-end="url(#oarr)">
+          <line x1="150" y1="150" x2="225" y2="150" stroke-dasharray="80" stroke-dashoffset="80" style="--len:80px;animation:drawLine .4s .6s forwards"/>
+          <line x1="360" y1="135" x2="430" y2="80" stroke-dasharray="90" stroke-dashoffset="90" style="--len:90px;animation:drawLine .4s 1.0s forwards"/>
+          <line x1="360" y1="150" x2="430" y2="150" stroke-dasharray="80" stroke-dashoffset="80" style="--len:80px;animation:drawLine .4s 1.2s forwards"/>
+          <line x1="360" y1="165" x2="430" y2="225" stroke-dasharray="95" stroke-dashoffset="95" style="--len:95px;animation:drawLine .4s 1.4s forwards"/>
+          <line x1="560" y1="80" x2="640" y2="80" stroke-dasharray="85" stroke-dashoffset="85" style="--len:85px;animation:drawLine .4s 1.8s forwards"/>
+          <line x1="560" y1="225" x2="640" y2="225" stroke-dasharray="85" stroke-dashoffset="85" style="--len:85px;animation:drawLine .4s 2.0s forwards"/>
+          <line x1="770" y1="225" x2="845" y2="225" stroke-dasharray="80" stroke-dashoffset="80" style="--len:80px;animation:drawLine .4s 2.3s forwards"/>
+        </g>
+        <!-- widget nodes -->
+        <g font-family="GenSeki TW,sans-serif" text-anchor="middle">
+          <g opacity="0" style="animation:pop .4s .3s both"><rect x="60" y="125" width="90" height="50" rx="10" fill="#fff" stroke="#0E7C7B" stroke-width="2" filter="url(#osh)"/><text x="105" y="147" font-size="22">📄</text><text x="105" y="167" font-size="11" font-weight="700">File</text></g>
+          <g opacity="0" style="animation:pop .4s .7s both"><rect x="225" y="122" width="135" height="56" rx="10" fill="#fff" stroke="#0E7C7B" stroke-width="2" filter="url(#osh)"/><text x="292" y="146" font-size="20">🌊</text><text x="292" y="166" font-size="11" font-weight="700">Preprocess Spectra</text></g>
+          <g opacity="0" style="animation:pop .4s 1.1s both"><rect x="430" y="56" width="130" height="48" rx="10" fill="#fff" stroke="#7c3aed" stroke-width="2" filter="url(#osh)"/><text x="495" y="78" font-size="16">📉</text><text x="495" y="95" font-size="11" font-weight="700">PCA</text></g>
+          <g opacity="0" style="animation:pop .4s 1.3s both"><rect x="430" y="126" width="130" height="48" rx="10" fill="#fff" stroke="#C8941F" stroke-width="2" filter="url(#osh)"/><text x="495" y="148" font-size="16">📈</text><text x="495" y="165" font-size="11" font-weight="700">PLS（迴歸）</text></g>
+          <g opacity="0" style="animation:pop .4s 1.5s both"><rect x="430" y="200" width="130" height="50" rx="10" fill="#fff" stroke="#0E7C7B" stroke-width="2" filter="url(#osh)"/><text x="495" y="222" font-size="11" font-weight="700">SVM /</text><text x="495" y="238" font-size="11" font-weight="700">Random Forest</text></g>
+          <g opacity="0" style="animation:pop .4s 1.9s both"><rect x="640" y="56" width="130" height="48" rx="10" fill="#fff" stroke="#7c3aed" stroke-width="2" filter="url(#osh)"/><text x="705" y="78" font-size="16">🔵</text><text x="705" y="95" font-size="11" font-weight="700">Scatter Plot</text></g>
+          <g opacity="0" style="animation:pop .4s 2.1s both"><rect x="640" y="200" width="130" height="50" rx="10" fill="#fff" stroke="#0E7C7B" stroke-width="2" filter="url(#osh)"/><text x="705" y="222" font-size="11" font-weight="700">Test &amp; Score</text><text x="705" y="238" font-size="10" fill="#666">交叉驗證</text></g>
+          <g opacity="0" style="animation:pop .4s 2.4s both"><rect x="845" y="200" width="105" height="50" rx="10" fill="#fff" stroke="#E36414" stroke-width="2" filter="url(#osh)"/><text x="897" y="222" font-size="10.5" font-weight="700">Confusion</text><text x="897" y="237" font-size="10.5" font-weight="700">Matrix</text></g>
+        </g>
+      </svg>
+      <div class="cap" style="width:92%"><p>開源 <strong>Orange Data Mining</strong> + <strong>Spectroscopy</strong> 外掛：用滑鼠把 widget 連起來——讀檔 → 預處理光譜 → PCA / PLS / 分類 → 測試評分 → 混淆矩陣。<span class="hl">同樣的科學，零程式碼。</span></p></div>
+    </div>
+    <div class="progress-bar" id="pb8"></div>
+  </div>
+
+  <!-- P9 Takeaway -->
+  <div class="slide dark" data-slide="9">
+    <div class="chip"><span>09</span>/ 9 — 帶走一句話</div>
+    <div class="big-q" style="font-size:var(--fs-sub);animation-delay:.2s">高光譜</div>
+    <div class="big-q" style="font-size:var(--fs-title);color:var(--teal);animation-delay:.5s">讓你看見肉眼看不見的化學</div>
+    <div class="answer-line" style="animation-delay:1.0s">要完全控制與彈性 → 用 <span style="color:#fff;font-weight:900">Python</span>；要快速、視覺化、不寫程式 → 用 <span style="color:#fff;font-weight:900">Orange</span>。<br>同一套科學，兩條路徑，由你選擇。</div>
+    <div class="progress-bar" id="pb9"></div>
+  </div>
+
+</div>
+
+<div id="subtitle" class="subtitle"></div>
+
+<script>
+const PAGES=[
+  {i:1,dur:20,sub:"普通照片只有RGB三通道；高光譜每個像素記錄數百個波段——看見化學成分。"},
+  {i:2,dur:24,sub:"高光譜 = 資料立方體（空間×空間×數百波段）；每個像素一條光譜指紋。"},
+  {i:3,dur:33,sub:"SpectroFood 開源資料：4 食材、1028 樣本。不同相機→取共同 141 個 Vis 波段公平比較。"},
+  {i:4,dur:28,sub:"四食材各有光譜指紋。SNV 標準化消除散射干擾，凸顯化學差異。"},
+  {i:5,dur:28,sub:"PCA 降維：前2個主成分抓住94.6%變異。四食材在PC1-PC2上自然分成四群。"},
+  {i:6,dur:27,sub:"SVM 與隨機森林分類準確率都 100%。但這代表題目太簡單——定量預測才是真功夫。"},
+  {i:7,dur:34,sub:"PLS 從近紅外光譜預測乾物質：R²=0.84、RMSE 0.96%。真實食品QC在用的技術。"},
+  {i:8,dur:29,sub:"Orange Data Mining + Spectroscopy 外掛：滑鼠連接 widget 就完成整條分析，零程式碼。"},
+  {i:9,dur:25,sub:"高光譜讓你看見化學。要控制力用 Python，要易用性用 Orange——同一套科學，兩條路徑。"},
+];
+const slides=document.querySelectorAll('.slide');
+function pad(n){return String(n).padStart(2,'0')}
+function show(idx){
+  slides.forEach((s,i)=>s.classList.toggle('active',i===idx));
+  for(let i=1;i<=9;i++){const pb=document.getElementById('pb'+i);if(pb)pb.style.width=(i<=idx+1)?((idx+1)/9*100)+'%':'0%';}
+}
+function startVideo(){
+  const subEl=document.getElementById('subtitle');
+  function play(idx){
+    if(idx>=PAGES.length)return;
+    show(idx);
+    const pg=PAGES[idx];
+    subEl.textContent=pg.sub; subEl.style.opacity='1';
+    new Audio('assets/narration/page-'+pad(pg.i)+'.mp3').play().catch(()=>{});
+    setTimeout(()=>play(idx+1),pg.dur*1000);
+  }
+  play(0);
+}
+// manual nav
+let cur=0;
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key===' '){cur=Math.min(8,cur+1);show(cur);}
+  if(e.key==='ArrowLeft'){cur=Math.max(0,cur-1);show(cur);}
+  if(e.key==='f'||e.key==='F'){document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();}
+});
+show(0);
+const params=new URLSearchParams(window.location.search);
+if(params.get('render')==='true'){setTimeout(startVideo,900);}
+</script>
+</body>
+</html>

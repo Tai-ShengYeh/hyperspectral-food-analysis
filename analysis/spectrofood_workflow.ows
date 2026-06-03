@@ -1,0 +1,32 @@
+<?xml version='1.0' encoding='utf-8'?>
+<scheme version="2.0" title="SpectroFood 高光譜分析工作流" description="食品高光譜分析：File -> Preprocess Spectra (SNV) -> PCA -> Scatter Plot；以及 -> Test &amp; Score (SVM / Random Forest) -> Confusion Matrix；PLS 迴歸預測乾物質。對應教學影片 P4-P8。">
+	<nodes>
+		<node id="0" name="File" qualified_name="Orange.widgets.data.owfile.OWFile" project_name="Orange3" version="" title="File (SpectroFood.csv)" position="(100.0, 250.0)" />
+		<node id="1" name="Preprocess Spectra" qualified_name="orangecontrib.spectroscopy.widgets.owpreprocess.OWPreprocess" project_name="Orange-Spectroscopy" version="" title="Preprocess Spectra (SNV)" position="(280.0, 250.0)" />
+		<node id="2" name="PCA" qualified_name="Orange.widgets.unsupervised.owpca.OWPCA" project_name="Orange3" version="" title="PCA" position="(470.0, 150.0)" />
+		<node id="3" name="Scatter Plot" qualified_name="Orange.widgets.visualize.owscatterplot.OWScatterPlot" project_name="Orange3" version="" title="Scatter Plot (PC1 vs PC2)" position="(650.0, 150.0)" />
+		<node id="4" name="Test and Score" qualified_name="Orange.widgets.evaluate.owtestandscore.OWTestAndScore" project_name="Orange3" version="" title="Test &amp; Score" position="(650.0, 330.0)" />
+		<node id="5" name="SVM" qualified_name="Orange.widgets.model.owsvm.OWSVM" project_name="Orange3" version="" title="SVM (RBF)" position="(470.0, 360.0)" />
+		<node id="6" name="Random Forest" qualified_name="Orange.widgets.model.owrandomforest.OWRandomForest" project_name="Orange3" version="" title="Random Forest" position="(470.0, 440.0)" />
+		<node id="7" name="Confusion Matrix" qualified_name="Orange.widgets.evaluate.owconfusionmatrix.OWConfusionMatrix" project_name="Orange3" version="" title="Confusion Matrix" position="(840.0, 330.0)" />
+		<node id="8" name="PLS" qualified_name="orangecontrib.spectroscopy.widgets.owpls.OWPLS" project_name="Orange-Spectroscopy" version="" title="PLS (Dry Matter)" position="(470.0, 250.0)" />
+	</nodes>
+	<links>
+		<link id="0" source_node_id="0" sink_node_id="1" source_channel="Data" sink_channel="Data" enabled="true" />
+		<link id="1" source_node_id="1" sink_node_id="2" source_channel="Preprocessed Data" sink_channel="Data" enabled="true" />
+		<link id="2" source_node_id="2" sink_node_id="3" source_channel="Transformed Data" sink_channel="Data" enabled="true" />
+		<link id="3" source_node_id="1" sink_node_id="4" source_channel="Preprocessed Data" sink_channel="Data" enabled="true" />
+		<link id="4" source_node_id="5" sink_node_id="4" source_channel="Model" sink_channel="Learner" enabled="true" />
+		<link id="5" source_node_id="6" sink_node_id="4" source_channel="Model" sink_channel="Learner" enabled="true" />
+		<link id="6" source_node_id="4" sink_node_id="7" source_channel="Evaluation Results" sink_channel="Evaluation Results" enabled="true" />
+		<link id="7" source_node_id="1" sink_node_id="8" source_channel="Preprocessed Data" sink_channel="Data" enabled="true" />
+	</links>
+	<annotations>
+		<text id="0" type="text/plain" rect="(95.0, 150.0, 180.0, 60.0)" font-family="Sans Serif" font-size="11">① 讀入 SpectroFood CSV
+（食材標籤 + 乾物質 + 光譜）</text>
+		<text id="1" type="text/plain" rect="(840.0, 250.0, 170.0, 50.0)" font-family="Sans Serif" font-size="11">分類結果：SVM / RF
+測試集準確率 100%</text>
+		<text id="2" type="text/plain" rect="(430.0, 530.0, 230.0, 50.0)" font-family="Sans Serif" font-size="11">PLS 迴歸預測乾物質
+10-fold CV R² = 0.84</text>
+	</annotations>
+</scheme>

@@ -1,0 +1,25 @@
+{
+  "n_samples": 1028,
+  "n_common_bands": 141,
+  "common_min": 398.0,
+  "common_max": 773.0,
+  "full_max": 1717.0,
+  "foods": {
+    "蘋果": 240,
+    "花椰菜": 250,
+    "韭蔥": 288,
+    "蘑菇": 250
+  },
+  "pca_pc1": 71.6,
+  "pca_pc2": 23.0,
+  "pca_pc12_cum": 94.6,
+  "svm_accuracy": 100.0,
+  "rf_accuracy": 100.0,
+  "n_test": 257,
+  "pls_r2": 0.84,
+  "pls_rmse": 0.96,
+  "pls_ncomp": 12,
+  "dm_n": 288,
+  "leek_bands": 421,
+  "leek_max_nm": 1717.0
+}
