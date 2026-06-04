@@ -4,6 +4,17 @@
 互動教學投影片（中／英）+ 可重現的 Python 分析腳本 + Orange 視覺化工作流。
 針對食品化學研究生，使用真實開源資料集 **SpectroFood**（Zenodo 8362947）。
 
+## 📚 教學系列 — 光譜 × 食品分析（化學計量學）
+
+**🏠 課程總入口 / Portal：** https://tai-shengyeh.github.io/
+
+| 課程 | 方法 | 線上 |
+|------|------|------|
+| NIR 近紅外光譜 | PCA + PLS | [↗](https://tai-shengyeh.github.io/chemometrics-teaching/) |
+| MS 質譜 | PCA + PLS-DA | [↗](https://tai-shengyeh.github.io/ms-food-analysis/) |
+| Raman 拉曼光譜 | 散射光譜 + 化學計量學 | [↗](https://tai-shengyeh.github.io/raman-food-analysis/) |
+| **Hyperspectral 高光譜（本 repo）** | 影像光譜 + Orange/Python | [↗](https://tai-shengyeh.github.io/hyperspectral-food-analysis/) |
+
 ## 🌐 線上瀏覽 / Live site
 GitHub Pages：開啟 `index.html`（教材中心），或直接看：
 - 中文投影片：`zh/index.html`
