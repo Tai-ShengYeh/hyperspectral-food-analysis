@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>高光譜成像 × 食品分析 — PCA、分類與 PLS 迴歸</title>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/atom-one-dark.min.css">
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet">
+
+<style>
+@font-face{font-family:'GenSeki';src:url('assets/fonts/GenSekiGothic2TW-H.otf') format('opentype');font-weight:900;font-display:swap;}
+@font-face{font-family:'GenSeki';src:url('assets/fonts/GenSekiGothic2TW-B.otf') format('opentype');font-weight:700;font-display:swap;}
+@font-face{font-family:'GenSeki';src:url('assets/fonts/GenSekiGothic2TW-M.otf') format('opentype');font-weight:500;font-display:swap;}
+
+:root{
+  --paper:#FAF7EE; --paper2:#F2EDDC; --ink:#1A1A1A; --ink-soft:#403a30;
+  --teal:#0E7C7B; --coral:#E36414; --gold:#C8941F; --line:#D9D2BE;
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{margin:0;font-family:'GenSeki','Noto Sans TC',system-ui,sans-serif;font-weight:500;
+  color:var(--ink);background:var(--paper);line-height:1.65;font-size:18px;}
+h1,h2,h3{font-weight:900;line-height:1.2;letter-spacing:.01em;}
+a{color:var(--teal);text-decoration:none;} a:hover{text-decoration:underline;}
+code,pre,kbd{font-family:'JetBrains Mono','Fira Code',Consolas,monospace;}
+
+nav{position:sticky;top:0;z-index:50;background:rgba(26,26,26,.96);backdrop-filter:blur(6px);
+  display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding:10px 22px;}
+nav .brand{color:#fff;font-weight:900;font-size:18px;margin-right:auto;}
+nav .brand b{color:var(--gold);}
+nav a{color:#e9e4d6;font-weight:700;font-size:14.5px;padding:6px 11px;border-radius:8px;}
+nav a:hover{background:rgba(255,255,255,.12);text-decoration:none;color:#fff;}
+
+.hero{background:var(--ink);color:var(--paper);padding:84px 22px 70px;text-align:center;}
+.hero h1{font-size:clamp(34px,6vw,66px);margin:0 0 14px;}
+.hero h1 .accent{color:var(--coral);}
+.hero p.sub{font-size:clamp(17px,2.4vw,24px);color:#cfc8b6;font-weight:700;max-width:820px;margin:0 auto 28px;}
+.hero .facts{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:10px;}
+.hero .fact{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16);border-radius:14px;
+  padding:14px 20px;min-width:140px;}
+.hero .fact b{display:block;font-size:30px;color:var(--gold);font-weight:900;}
+.hero .fact span{font-size:14px;color:#cfc8b6;font-weight:700;}
+
+main{max-width:1080px;margin:0 auto;padding:0 22px;}
+section{padding:64px 0 8px;scroll-margin-top:64px;border-top:1px solid var(--line);}
+section:first-of-type{border-top:none;}
+.kicker{color:var(--coral);font-weight:900;font-size:15px;letter-spacing:.14em;text-transform:uppercase;}
+section h2{font-size:clamp(28px,4vw,42px);margin:6px 0 8px;}
+section h3{font-size:23px;margin:34px 0 10px;color:var(--teal);}
+p{margin:14px 0;}
+.lead{font-size:20px;color:var(--ink-soft);}
+
+.grid{display:grid;gap:18px;margin:24px 0;}
+.g4{grid-template-columns:repeat(4,1fr);} .g3{grid-template-columns:repeat(3,1fr);} .g2{grid-template-columns:repeat(2,1fr);}
+.card{background:var(--paper2);border:1px solid var(--line);border-radius:16px;padding:22px;}
+.card h4{margin:0 0 8px;font-size:19px;font-weight:900;color:var(--teal);}
+.card.coral h4{color:var(--coral);} .card.gold h4{color:var(--gold);}
+.card .icon{font-size:1.9rem;line-height:1;margin-bottom:8px;}
+.card ul{margin:8px 0 0;padding-left:1.1em;} .card li{margin:4px 0;font-size:16px;}
+.card .big{font-size:40px;font-weight:900;color:var(--coral);line-height:1;margin:4px 0 6px;}
+.card .note{font-size:14px;color:var(--ink-soft);margin-top:10px;}
+
+figure{margin:26px 0;background:var(--paper2);border:1px solid var(--line);border-radius:16px;
+  padding:14px;text-align:center;}
+figure img{max-width:100%;height:auto;border-radius:8px;display:block;margin:0 auto;}
+figcaption{font-size:15px;color:var(--ink-soft);font-weight:700;margin-top:10px;}
+figcaption b{color:var(--coral);}
+
+.callout{border-left:6px solid var(--teal);background:var(--paper2);border-radius:0 14px 14px 0;
+  padding:18px 22px;margin:24px 0;font-size:18px;}
+.callout.coral{border-color:var(--coral);} .callout.gold{border-color:var(--gold);}
+.callout .tag{font-weight:900;color:var(--teal);} .callout.coral .tag{color:var(--coral);} .callout.gold .tag{color:var(--gold);}
+
+.video-wrap{background:var(--ink);border-radius:16px;overflow:hidden;margin:24px 0;border:1px solid var(--line);}
+.video-wrap iframe{width:100%;aspect-ratio:16/9;display:block;border:0;background:#000;}
+.video-note a{color:var(--gold);}
+.video-note{padding:12px 18px;color:#cfc8b6;font-size:14px;font-weight:700;background:var(--ink);}
+
+pre{background:#1f2329;border-radius:14px;padding:0;margin:18px 0;overflow:auto;border:1px solid #2c313a;}
+pre code{display:block;padding:20px 22px;font-size:14.5px;line-height:1.6;background:transparent;}
+.codecap{font-size:14px;font-weight:700;color:var(--ink-soft);margin:18px 0 -8px;}
+details{background:var(--paper2);border:1px solid var(--line);border-radius:14px;padding:6px 18px;margin:14px 0;}
+summary{font-weight:900;cursor:pointer;padding:10px 0;color:var(--teal);}
+
+table{width:100%;border-collapse:collapse;margin:24px 0;font-size:16.5px;background:var(--paper2);
+  border-radius:14px;overflow:hidden;}
+th,td{padding:13px 16px;text-align:left;border-bottom:1px solid var(--line);}
+th{background:var(--teal);color:#fff;font-weight:900;}
+tr:last-child td{border-bottom:none;}
+td b.teal{color:var(--teal);} td b.coral{color:var(--coral);} td b.gold{color:var(--gold);}
+td.yes{color:var(--teal);font-weight:900;} td.no{color:var(--coral);font-weight:900;}
+
+.flow{background:#1f2329;color:#e9e4d6;border-radius:14px;padding:20px;overflow:auto;font-size:13.5px;line-height:1.5;}
+.btnrow{display:flex;gap:12px;flex-wrap:wrap;margin:20px 0;}
+.btn{background:var(--teal);color:#fff;font-weight:900;padding:12px 20px;border-radius:12px;font-size:15px;}
+.btn.coral{background:var(--coral);} .btn.gold{background:var(--gold);} .btn:hover{text-decoration:none;opacity:.92;}
+
+footer{background:var(--ink);color:#cfc8b6;padding:40px 22px;margin-top:60px;text-align:center;font-size:14px;}
+footer b{color:var(--gold);} footer a{color:#FFDE7A;}
+.eq{background:var(--paper2);border:1px dashed var(--teal);border-radius:12px;padding:14px 18px;margin:18px 0;text-align:center;font-size:20px;}
+
+@media(max-width:760px){.g4,.g3,.g2{grid-template-columns:1fr;} body{font-size:17px;}}
+/* === bright-white theme === */
+:root{--paper:#FFFFFF;--cover:#119C9A;}
+.hero{background:var(--cover);}
+.hero p.sub{color:rgba(255,255,255,.9);}
+.hero .fact span{color:rgba(255,255,255,.82);}
+.hero .fact b{color:#FFDE7A;}
+footer{background:var(--cover);color:rgba(255,255,255,.82);}
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="brand">高光譜成像 × 食品分析 <b>·</b> PCA / 分類 / PLS</span>
+  <a href="#why">為什麼</a>
+  <a href="#data">資料</a>
+  <a href="#pca">PCA</a>
+  <a href="#classify">分類</a>
+  <a href="#pls">PLS 迴歸</a>
+  <a href="#python">Python</a>
+  <a href="#orange">Orange</a>
+  <a href="#summary">總結</a>
+</nav>
+
+<header class="hero">
+  <h1>高光譜成像，讓每個像素都有一條<span class="accent">光譜</span></h1>
+  <p class="sub">用真實開源資料 SpectroFood（蘋果·花椰菜·韭蔥·蘑菇），走一遍化學計量學三步：<br>PCA 看結構、分類辨食材、PLS 迴歸測乾物質。</p>
+  <div class="facts">
+    <div class="fact"><b>1028</b><span>真實樣本</span></div>
+    <div class="fact"><b>141</b><span>共同可見光波段</span></div>
+    <div class="fact"><b>94.6%</b><span>PCA 前 2 主成分</span></div>
+    <div class="fact"><b>100%</b><span>四食材分類準確率</span></div>
+    <div class="fact"><b>0.84</b><span>乾物質 PLS R²</span></div>
+  </div>
+</header>
+
+<main>
+
+<!-- ===== WHY ===== -->
+<section id="why">
+  <span class="kicker">為什麼是高光譜</span>
+  <h2>影像 × 光譜：每個像素一條指紋</h2>
+  <p class="lead">一般相機每個像素只有 RGB 三個數字；<b>高光譜成像（Hyperspectral Imaging, HSI）</b>讓每個像素都記錄一整條光譜——
+  把影像（空間 x, y）和光譜（波長 λ）疊成一個「資料立方體」。在可見-近紅外（Vis-NIR）波段，這條光譜反映了水分、糖、色素等成分，
+  讓我們能<b>不接觸、不破壞</b>地一次看出整顆水果或整片葉菜的化學分布。</p>
+  <div class="grid g3">
+    <div class="card"><div class="icon">🧊</div><h4>資料立方體</h4>每個像素一條光譜，整張影像就是 (x, y, λ) 的三維資料——空間與光譜同時到手。</div>
+    <div class="card"><div class="icon">🌈</div><h4>Vis-NIR 看成分</h4>可見光看顏色/色素，近紅外看 O–H、C–H 等鍵結，對應水分與乾物質。</div>
+    <div class="card coral"><div class="icon">⚠️</div><h4>但是…</h4>每個樣本是上百個高度相關的數字，<b>必須靠化學計量學</b>（PCA / 分類 / PLS）才能解讀。</div>
+  </div>
+  <div class="flow"><pre style="margin:0;background:none;border:none;padding:0;color:#e9e4d6;">  食材 ──▶ 高光譜相機 ──▶ 資料立方體 (x, y, λ) ──▶ 取每個樣本平均光譜 ──▶ 整理成「樣本 × 波段」資料矩陣</pre></div>
+
+  <div class="video-wrap">
+    <iframe src="https://www.youtube-nocookie.com/embed/N0pRLiQXY9E" title="高光譜資料分析教學影片（中文）" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    <div class="video-note">🎬 教學影片 · 中文旁白約 4 分 · 完整工作流導覽 · <a href="https://youtu.be/N0pRLiQXY9E" target="_blank" rel="noopener">YouTube</a> ｜ <a href="https://youtu.be/rTfMRswX6bw" target="_blank" rel="noopener">English version</a></div>
+  </div>
+
+  <div class="callout"><span class="tag">本課三步走：</span>
+    先用 <b>PCA</b>（非監督）看資料結構，再用 <b>SVM / 隨機森林</b>（監督）分辨四種食材，最後用 <b>PLS</b>（迴歸）把光譜換算成乾物質含量。</div>
+</section>
+
+<!-- ===== DATA ===== -->
+<section id="data">
+  <span class="kicker">資料集</span>
+  <h2>SpectroFood：四種食材的真實光譜（開源）</h2>
+  <p class="lead">資料來自 <b>SpectroFood</b> 開源資料集（Zenodo 8362947）：蘋果、花椰菜、韭蔥、蘑菇的 Vis-NIR 反射光譜，並附實驗室量得的乾物質含量。
+  共 <b>1028</b> 個樣本，全部數字皆由 <code>analysis/run_analysis.py</code> 實際執行產生、可重現。</p>
+  <table>
+    <tr><th>食材 food</th><th>樣本數</th><th>本課用途</th></tr>
+    <tr><td><b class="coral">蘋果 Apple</b></td><td>240</td><td>PCA 探索 · 分類</td></tr>
+    <tr><td><b class="teal">花椰菜 Broccoli</b></td><td>250</td><td>PCA 探索 · 分類</td></tr>
+    <tr><td><b class="gold">韭蔥 Leek</b></td><td>288</td><td>分類 · <b class="coral">PLS 乾物質迴歸</b></td></tr>
+    <tr><td>蘑菇 Mushroom</td><td>250</td><td>PCA 探索 · 分類</td></tr>
+  </table>
+  <div class="callout coral"><span class="tag">關鍵設計：</span>
+    四種食材用<b>不同相機</b>量測，波段範圍不一。為了公平比較與分類，只取四者<b>共同的 141 個可見光波段（398–773 nm）</b>；
+    而乾物質迴歸改用<b>韭蔥的完整光譜（421 波段，延伸到 1717 nm 近紅外）</b>——因為成分資訊主要落在 NIR。</div>
+
+  <h3>先看原始光譜，再做 SNV 前處理</h3>
+  <p>不同樣本因表面散射、量測距離不同，整條光譜會上下平移或縮放。<b>SNV（Standard Normal Variate，標準正態變量）</b>逐樣本減平均、除標準差，
+  消除這種散射差異，讓真正的化學形狀浮現——這是光譜分析的標準前處理。</p>
+  <figure>
+    <img src="zh/assets/images/fig1_spectra.png" alt="四種食材的原始光譜與 SNV 標準化後">
+    <figcaption>左：四種食材的平均反射光譜（陰影為標準差），可見光與紅邊區已標出；右：<b>SNV 標準化後</b>消除散射差異，形狀差異更清楚。</figcaption>
+  </figure>
+</section>
+
+<!-- ===== PCA ===== -->
+<section id="pca">
+  <span class="kicker">方法一 · 非監督</span>
+  <h2>PCA：把上百個波段壓成幾個方向</h2>
+  <p class="lead">主成分分析（Principal Component Analysis）在資料最分散的方向上建立新座標軸：PC1 是變異最大的方向、PC2 與它垂直且次大……
+  少數幾個主成分就能描述最重要的結構，把高維光譜畫成一張看得懂的散布圖。</p>
+  <div class="eq">$X \approx T\,P^{\top}$ &nbsp;—&nbsp; 分數 $T$ 是樣本位置、負荷量 $P$ 是波段如何組成新方向</div>
+  <figure>
+    <img src="zh/assets/images/fig2_pca.png" alt="PCA 解釋變異量與散布圖">
+    <figcaption>左：PC1 解釋 <b>71.6%</b>、PC2 解釋 <b>23.0%</b>，前兩個主成分就累積 <b>94.6%</b>；右：散布圖上四種食材自然分成四群。</figcaption>
+  </figure>
+  <div class="callout"><span class="tag">核心觀念：</span>
+    PCA 是<b>非監督</b>的——它沒看過「這是哪種食材」的標籤，只看光譜，卻能讓四種食材自己分群。它擅長探索、分群、找異常，
+    但<b>不會</b>直接告訴你「這是什麼」。</div>
+</section>
+
+<!-- ===== CLASSIFY ===== -->
+<section id="classify">
+  <span class="kicker">方法二 · 監督分類</span>
+  <h2>分類：用光譜辨認是哪種食材</h2>
+  <p class="lead">把 SNV 光譜切成訓練／測試集（75% / 25%），交給監督式分類器學「光譜 → 食材」的對應。
+  這裡用 <b>SVM（支援向量機）</b> 與 <b>隨機森林（Random Forest）</b> 兩種模型，在獨立測試集上驗證。</p>
+  <figure>
+    <img src="zh/assets/images/fig3_confusion.png" alt="SVM 分類混淆矩陣">
+    <figcaption>SVM 在 <b>257 個測試樣本</b>上的混淆矩陣：對角線全中——四種食材<b>沒有一個認錯</b>。</figcaption>
+  </figure>
+  <div class="grid g3">
+    <div class="card"><h4>SVM 準確率</h4><div class="big">100%</div>RBF 核 + 標準化，測試集 257 樣本全對。</div>
+    <div class="card"><h4>隨機森林</h4><div class="big">100%</div>300 棵樹，同樣達到滿分。</div>
+    <div class="card coral"><h4>為什麼這麼準？</h4>四種食材的光譜差異很大、樣本充足，SNV 後在高維空間幾乎線性可分。<span class="note">真實食品鑑別通常更難，別把 100% 當常態。</span></div>
+  </div>
+  <div class="callout coral"><span class="tag">應用：</span>
+    把「食材種類」換成別的標籤，同一套流程就是食品鑑別主力——<b>產地溯源、品種鑑別、新鮮度分級、摻偽偵測</b>。</div>
+</section>
+
+<!-- ===== PLS ===== -->
+<section id="pls">
+  <span class="kicker">方法三 · 監督迴歸</span>
+  <h2>PLS：把光譜換算成乾物質含量</h2>
+  <p class="lead">分類給的是「類別」；很多時候我們要的是一個<b>連續數值</b>，例如乾物質、糖度、含水量。
+  偏最小二乘迴歸（PLS Regression）找出的潛在變量<b>同時</b>解釋光譜變異、又對齊目標數值，是光譜定量的標準方法。</p>
+  <div class="eq">$\max\ \operatorname{cov}(Xw,\ y)$ &nbsp;—&nbsp; 每個潛在變量最大化光譜 $X$ 與目標 $y$（乾物質）的共變異</div>
+  <p>這裡用<b>韭蔥</b>的完整光譜（421 波段，延伸到 <b>1717 nm</b> 近紅外）來預測乾物質——因為水分、有機物的吸收主要在 NIR，
+  只用可見光是不夠的。以 <b>12 個潛在變量</b>、<b>10 折交叉驗證</b>誠實評估。</p>
+  <figure>
+    <img src="zh/assets/images/fig4_regression.png" alt="PLS 預測乾物質 vs 實際">
+    <figcaption>288 個韭蔥樣本，預測 vs 實際乾物質：<b>10 折交叉驗證 R²=0.84、RMSE=0.96%</b>，點大致落在 1:1 線附近。</figcaption>
+  </figure>
+  <div class="callout gold"><span class="tag">為什麼用近紅外：</span>
+    分類只要看得出「不一樣」就好，可見光足夠；但要量出<b>成分含量</b>，得靠近紅外的鍵結吸收資訊。這也是為什麼乾物質迴歸要用韭蔥的完整 Vis-NIR 光譜。</div>
+</section>
+
+<!-- ===== PYTHON ===== -->
+<section id="python">
+  <span class="kicker">怎麼算的</span>
+  <h2>Python 程式（scikit-learn）</h2>
+  <p class="lead">整套分析用 <code>numpy / pandas / scikit-learn</code> 完成、可重現，完整檔案見 <code>analysis/run_analysis.py</code>。</p>
+
+  <p class="codecap">前處理 — SNV（逐樣本標準化，消除散射）</p>
+  <pre><code class="language-python">def snv(a):
+    """Standard Normal Variate：逐樣本減平均、除標準差。"""
+    return (a - a.mean(1, keepdims=True)) / a.std(1, keepdims=True)
+
+Xsnv = snv(Xc)          # Xc = 樣本 × 141 共同波段</code></pre>
+
+  <p class="codecap">PCA — 主成分分析</p>
+  <pre><code class="language-python">from sklearn.decomposition import PCA
+pca = PCA(n_components=10).fit(Xsnv)
+scores = pca.transform(Xsnv)              # 樣本在新軸上的位置
+ev = pca.explained_variance_ratio_        # PC1=71.6%, PC2=23.0%, 前2累積=94.6%</code></pre>
+
+  <p class="codecap">分類 — SVM + 隨機森林（獨立測試集）</p>
+  <pre><code class="language-python">from sklearn.model_selection import train_test_split
+from sklearn.svm import SVC
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+
+Xtr, Xte, ytr, yte = train_test_split(Xsnv, food, test_size=0.25,
+                                      random_state=42, stratify=food)
+svm = make_pipeline(StandardScaler(), SVC(kernel="rbf", C=10)).fit(Xtr, ytr)
+rf  = RandomForestClassifier(n_estimators=300, random_state=42).fit(Xtr, ytr)
+# 測試集 257 樣本：SVM 100%、RF 100%</code></pre>
+
+  <p class="codecap">PLS 迴歸 — 韭蔥乾物質（10 折 CV）</p>
+  <pre><code class="language-python">from sklearn.cross_decomposition import PLSRegression
+from sklearn.model_selection import cross_val_predict
+
+pls = PLSRegression(n_components=12)
+yhat = cross_val_predict(pls, snv(X_leek), dry_matter, cv=10)
+# R² = 0.84, RMSE = 0.96%（韭蔥 421 波段，至 1717 nm）</code></pre>
+
+  <details>
+    <summary>▶ 如何在本機重跑</summary>
+    <pre><code class="language-bash">pip install numpy pandas scipy scikit-learn matplotlib spectral
+cd analysis
+python run_analysis.py     # 下載/讀取 SpectroFood、SNV、PCA、SVM/RF、PLS
+# 圖輸出到 assets/images/，數字輸出到 results.json</code></pre>
+  </details>
+</section>
+
+<!-- ===== ORANGE ===== -->
+<section id="orange">
+  <span class="kicker">不寫程式的版本</span>
+  <h2>用 Orange Data Mining 親手拉一遍</h2>
+  <p class="lead">課堂可用 <b>Orange</b>（搭配 Orange-Spectroscopy 外掛）的拖拉式 widget，不寫一行程式就重現上面的 PCA、分類與迴歸。
+  開啟 <code>analysis/spectrofood_workflow.ows</code> 即可。</p>
+  <div class="flow"><pre style="margin:0;background:none;border:none;padding:0;color:#e9e4d6;">          ┌─ Data Table              （檢視原始光譜）
+          │
+ File ────┼─ Preprocess Spectra (SNV) ─┬─ PCA ──▶ Scatter Plot         ← PCA 分群（Color = food）
+(Spectro  │                            │
+ Food)    │                            ├─ Test &amp; Score ← SVM / Random Forest ──▶ Confusion Matrix   ← 分類
+          │                            │
+          └────────────────────────────┴─ PLS Regression ──▶ Predictions   ← 乾物質迴歸（韭蔥）</pre></div>
+  <table>
+    <tr><th>對應概念</th><th>Python 圖</th><th>Orange widget</th></tr>
+    <tr><td>光譜指紋（原始 / SNV）</td><td>fig1</td><td>File → Preprocess Spectra → Spectra</td></tr>
+    <tr><td>主成分散布圖</td><td>fig2</td><td>PCA → Scatter Plot（Color = food）</td></tr>
+    <tr><td>分類 + 混淆矩陣</td><td>fig3</td><td>SVM / Random Forest → Test &amp; Score → Confusion Matrix</td></tr>
+    <tr><td>乾物質迴歸</td><td>fig4</td><td>PLS Regression → Predictions / Scatter Plot</td></tr>
+  </table>
+  <div class="btnrow">
+    <a class="btn" href="analysis/spectrofood_workflow.ows">⬇ 下載 .ows 工作流程</a>
+    <a class="btn gold" href="analysis/run_analysis.py">🐍 Python 對照腳本</a>
+    <a class="btn coral" href="index.html">📋 回教材中心</a>
+  </div>
+</section>
+
+<!-- ===== SUMMARY ===== -->
+<section id="summary">
+  <span class="kicker">總結</span>
+  <h2>PCA、分類、PLS：一張表看懂</h2>
+  <table>
+    <tr><th>面向</th><th>PCA</th><th>分類（SVM/RF）</th><th>PLS 迴歸</th></tr>
+    <tr><td>學習方式</td><td><b class="teal">非監督</b></td><td><b class="coral">監督</b>（類別）</td><td><b class="coral">監督</b>（數值）</td></tr>
+    <tr><td>目的</td><td>探索、分群、找異常</td><td>辨認類別（食材/品種）</td><td>預測連續量（乾物質）</td></tr>
+    <tr><td>本課結果</td><td>前 2 PC = 94.6%，四群自分</td><td>測試集 100% 準確率</td><td>R²=0.84、RMSE=0.96%</td></tr>
+    <tr><td>關鍵圖</td><td>散布圖（fig2）</td><td>混淆矩陣（fig3）</td><td>預測 vs 實際（fig4）</td></tr>
+  </table>
+  <div class="callout"><span class="tag">帶走兩句話：</span>
+    高光譜把每個像素變成一條化學指紋；PCA 看結構、分類辨身分、PLS 量成分——同一套化學計量學，撐起非破壞食品檢測的大半江山。</div>
+</section>
+
+</main>
+
+<footer>
+  資料來源：<b>SpectroFood</b> 開源資料集（Zenodo 8362947，蘋果/花椰菜/韭蔥/蘑菇 Vis-NIR 光譜 + 乾物質）。<br>
+  分析與圖表以 Python（scikit-learn）產生、可重現；數字見 <code>analysis/results.json</code>。教學影片以 <b>claude-code-video-kit</b> 製作。<br>
+  高光譜成像 × 食品分析教學包 · PCA / 分類 / PLS ·
+  <a href="index.html">← 回教材中心</a> ·
+  <a href="zh/index.html">投影片版</a>
+</footer>
+
+<script>
+document.addEventListener("DOMContentLoaded",function(){
+  if(window.renderMathInElement){
+    renderMathInElement(document.body,{delimiters:[{left:"$",right:"$",display:false}]});
+  }
+  if(window.hljs){hljs.highlightAll();}
+});
+</script>
+</body>
+</html>
